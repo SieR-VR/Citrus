@@ -30,3 +30,8 @@ ObjectIntersection Sphere::getIntersection(const Ray& ray)
 
 	return ObjectIntersection(hit, distance, n, material);
 }
+
+unsigned long Sphere::getSizeInBytes()
+{
+	return sizeof(Sphere);
+}

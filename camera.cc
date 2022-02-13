@@ -1,7 +1,9 @@
 #include <cmath>
 #include "camera.h"
 
+#ifndef M_PI
 #define M_PI (3.14159265358979323846)
+#endif
 
 Camera::Camera(const Vec &position,
                const Vec &target,
@@ -35,4 +37,37 @@ Ray Camera::getRay(int x, int y)
     Vec target_pixel = start_pixel + x_direction * (vp_width * (x + 0.5) / width) - y_direction * (vp_height * (y + 0.5) / height);
 
     return Ray(position, (target_pixel - position).normalize());
+}
+
+void Camera::registerShader(Shader *shader)
+{
+    shader->addVariable("camera_position");
+    // shader->addVariable("target");
+    shader->addVariable("camera_direction");
+
+    // shader->addVariable("width");
+    // shader->addVariable("height");
+
+    shader->addVariable("fov");
+    shader->addVariable("aspect");
+    shader->addVariable("vp_dist");
+
+    shader->addVariable("x_direction");
+    shader->addVariable("y_direction");
+    // shader->addVariable("look_up");
+
+    shader->setVariable("camera_position", position);
+    // shader->setVariable("target", target);
+    shader->setVariable("camera_direction", direction);
+
+    // shader->setVariable("width", width);
+    // shader->setVariable("height", height);
+
+    shader->setVariable("fov", fov);
+    shader->setVariable("aspect", aspect);
+    shader->setVariable("vp_dist", vp_dist);
+
+    shader->setVariable("x_direction", x_direction);
+    shader->setVariable("y_direction", y_direction);
+    // shader->setVariable("look_up", y_direction);
 }

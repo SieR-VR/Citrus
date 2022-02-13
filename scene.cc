@@ -27,3 +27,11 @@ Vec Scene::traceRay(const Ray &ray, int depth)
 
     return intersection.material.color;
 }
+
+void Scene::registerShader(Shader *shader)
+{
+    for (auto& object : objects)
+    {
+        shader->setVariable(object.first, (void *)object.second, object.second->getSizeInBytes());
+    }
+}

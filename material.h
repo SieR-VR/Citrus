@@ -4,7 +4,7 @@
 #include "vec.h"
 #include "ray.h"
 
-enum class MaterialType {
+enum class MaterialType : int {
     DIFFUSE,
     SPECULAR,
     EMISSION,

@@ -3,18 +3,28 @@
 
 #include "scene.h"
 #include "camera.h"
+#include "shader.h"
 
-class Renderer 
+class Renderer
 {
 private:
     Scene *scene;
     Camera *camera;
-    Vec *pixel_buffer;
+    Shader *shader;
+
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    SDL_Texture *texture;
+    SDL_Event *event;
+
+    uint32_t render_VAO;
+    uint32_t render_VBO;
+    uint32_t render_EBO;
 
 public:
     Renderer(Scene *scene, Camera *camera);
-    void render(int samples);
-    void save_image(const char *filename);
+    void render();
+    void update();
 };
 
 #endif

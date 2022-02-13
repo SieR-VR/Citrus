@@ -12,6 +12,7 @@ public:
         : Object(center), radius(radius), material(material) {}
 
     virtual ObjectIntersection getIntersection(const Ray& ray);
+    virtual unsigned long getSizeInBytes();
 };
 
 #endif

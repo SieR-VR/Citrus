@@ -2,6 +2,7 @@
 #define OBJECT_H_
 
 #include "vec.h"
+#include "shader.h"
 #include "material.h"
 
 struct ObjectIntersection {
@@ -21,6 +22,7 @@ public:
     Object(const Vec& position)
         : position(position) {}
     virtual ObjectIntersection getIntersection(const Ray& ray) = 0;
+    virtual unsigned long getSizeInBytes() = 0;
 };
 
 #endif

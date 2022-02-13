@@ -3,7 +3,7 @@
 
 #include "vec.h"
 #include "ray.h"
-
+#include "shader.h"
 class Camera
 {
 public:
@@ -30,6 +30,8 @@ public:
         const float& vp_dist);
 
     Ray getRay(int x, int y);
+
+    void registerShader(Shader* shader);
 };
 
 #endif

@@ -1,55 +1,100 @@
+#include <iostream>
+#include <cmath>
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+
 #include "renderer.h"
 
-inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
-inline int toInt(float x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
+inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1
+                                                       : x; }
+inline int toInt(float x) { return int(clamp(x) * 255 + .5); }
 
-Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera) {
-    pixel_buffer = new Vec[camera->width * camera->height];
+float vertices[] = {
+    -1, -1, 
+    1, -1,
+    1, 1,
+    -1, 1};
+
+uint32_t indices[] = {
+    0, 1, 2,
+    2, 3, 0};
+
+Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera)
+{
+    SDL_Init(SDL_INIT_VIDEO);
+
+    window = SDL_CreateWindow("Raytracer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera->width, camera->height, 0);
+    if (!window)
+        throw std::runtime_error("SDL_CreateWindow: " + std::string(SDL_GetError()));
+
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+        throw std::runtime_error("SDL_CreateRenderer: " + std::string(SDL_GetError()));
+
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, camera->width, camera->height);
+
+    glewInit();
+    std::cout << glGetString(GL_VERSION) << std::endl;
+
+    event = new SDL_Event();
+    shader = new Shader("shader", "/home/sier/Citrus/shaders/shader.vert", "/home/sier/Citrus/shaders/shader.frag");
+    camera->registerShader(shader);
+    scene->registerShader(shader);
+
+    glGenVertexArrays(1, &render_VAO);
+    glGenBuffers(1, &render_VBO);
+    glGenBuffers(1, &render_EBO);
+
+    glBindVertexArray(render_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, render_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, render_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
-void Renderer::render(int samples) {
-    int width = camera->width;
-    int height = camera->height;
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            Vec color(0, 0, 0);
-            for (int sy = 0; sy < 2; sy++) {
-                for (int sx = 0; sx < 2; sx++) {
-                    float u = (x + (float(sx) + rand() / (RAND_MAX / 2)) / 2) / width;
-                    float v = (y + (float(sy) + rand() / (RAND_MAX / 2)) / 2) / height;
-                    Ray ray = camera->getRay(u, v);
-                    color += scene->traceRay(ray, 0);
-                }
-            }
-            color /= 4;
-            int ir = toInt(color.x);
-            int ig = toInt(color.y);
-            int ib = toInt(color.z);
-            pixel_buffer[y * width + x] = Vec(ir, ig, ib);
-        }
-    }
-}
-
-void Renderer::save_image(const char *file_name) {
-    int width = camera->width;
-    int height = camera->height;
-    FILE *f = fopen(file_name, "wb");
-
-    uint64_t magic_number = 0x89504e470d0a1a0a;
-    fwrite(&magic_number, sizeof(uint64_t), 1, f);
-
+void Renderer::render()
+{
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
     
+    shader->activate();
+    glBindVertexArray(render_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            Vec color = pixel_buffer[y * width + x];
-            int ir = toInt(color.x);
-            int ig = toInt(color.y);
-            int ib = toInt(color.z);
-            fputc(ir, f);
-            fputc(ig, f);
-            fputc(ib, f);
+    SDL_GL_SwapWindow(window);
+}
+
+void Renderer::update()
+{
+    while (SDL_PollEvent(event))
+    {
+        if (event->type == SDL_QUIT)
+            exit(0);
+
+        if (event->type == SDL_KEYDOWN)
+        {
+            if (event->key.keysym.sym == SDLK_w)
+                camera->position.z -= 10;
+            if (event->key.keysym.sym == SDLK_s)
+                camera->position.z += 10;
+
+            if (event->key.keysym.sym == SDLK_a)
+                camera->position.x -= 10;
+            if (event->key.keysym.sym == SDLK_d)
+                camera->position.x += 10;
+
+            if (event->key.keysym.sym == SDLK_q)
+                camera->position.y -= 10;
+            if (event->key.keysym.sym == SDLK_e)
+                camera->position.y += 10;
         }
     }
-    fclose(f);
 }
