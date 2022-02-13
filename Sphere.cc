@@ -3,9 +3,9 @@
 
 #define EPSILON 0.001f
 
-ObjectIntersection Sphere::getIntersection(const Ray& ray)
+ObjectIntersection Sphere::getIntersection(const Ray &ray)
 {
-    bool hit = false;
+	bool hit = false;
 	float distance = 0;
 	Vec n = Vec();
 
@@ -31,7 +31,18 @@ ObjectIntersection Sphere::getIntersection(const Ray& ray)
 	return ObjectIntersection(hit, distance, n, material);
 }
 
-unsigned long Sphere::getSizeInBytes()
+void Sphere::registerUniform(Shader *shader, const std::string &name)
 {
-	return sizeof(Sphere);
+	shader->addVariable(name + ".position");
+	shader->addVariable(name + ".radius");
+	
+	material.registerUniform(shader, name + ".material");
+}
+
+void Sphere::setUniform(Shader *shader, const std::string &name)
+{
+	shader->setVariable(name + ".position", position);
+	shader->setVariable(name + ".radius", radius);
+
+	material.setUniform(shader, name + ".material");
 }

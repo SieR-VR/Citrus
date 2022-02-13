@@ -31,31 +31,39 @@ struct Sphere {
     Material material;
 };
 
-out vec4 fragColor;
+struct Camera {
+    vec3 position;
+    vec3 target;
+    vec3 direction;
 
-uniform vec3 camera_position;
-uniform vec3 camera_direction;
+    int width;
+    int height;
 
-uniform float fov;
-uniform float aspect;
-uniform float vp_dist;
+    float fov;
+    float aspect;
+    float vp_dist;
 
-uniform vec3 x_direction;
-uniform vec3 y_direction;
+    vec3 x_direction;
+    vec3 y_direction;
+    vec3 look_up;
+};
 
-uniform Sphere sphere;
+uniform Camera camera;
+uniform Sphere sphere1;
 uniform Sphere sphere2;
 uniform Sphere sphere3;
 
-Ray getRay() {
-    vec3 center = camera_position + camera_direction * vp_dist;
-    float vp_width = 2. * vp_dist * tan((fov / 2.0) * M_PI / 180.0);
-    float vp_height = vp_width * 1. / aspect;
+out vec4 fragColor;
 
-    vec3 start_pixel = center - x_direction * (vp_width / 2.) + y_direction * (vp_height / 2.);
-    vec3 target_pixel = start_pixel + x_direction * (vp_width * gl_FragCoord.x) - y_direction * (vp_height * gl_FragCoord.y);
+Ray getRay(Camera camera) {
+    vec3 center = camera.position + camera.direction * camera.vp_dist;
+    float vp_width = 2. * camera.vp_dist * tan((camera.fov / 2.0) * M_PI / 180.0);
+    float vp_height = vp_width * 1. / camera.aspect;
 
-    return Ray(camera_position, normalize(target_pixel - camera_position));
+    vec3 start_pixel = center - camera.x_direction * (vp_width / 2.) + camera.y_direction * (vp_height / 2.);
+    vec3 target_pixel = start_pixel + camera.x_direction * (vp_width * (gl_FragCoord.x + 0.5) / float(camera.width)) - camera.y_direction * (vp_height * (gl_FragCoord.y + 0.5) / float(camera.height));
+
+    return Ray(camera.position, normalize(target_pixel - camera.position));
 }
 
 ObjectIntersection Sphere_getIntersection(Sphere sphere, Ray ray) {
@@ -63,7 +71,7 @@ ObjectIntersection Sphere_getIntersection(Sphere sphere, Ray ray) {
     float dist = 0.0;
     vec3 normal = vec3(0.0);
 
-    vec3 L = camera_position - ray.origin;
+    vec3 L = sphere.position - ray.origin;
     float tca = dot(L, ray.direction);
     float det = tca * tca - dot(L, L) + sphere.radius * sphere.radius;
     
@@ -89,11 +97,11 @@ ObjectIntersection intersect(Sphere sphere, Ray ray) {
 }
 
 void main() {
-    Ray ray = getRay();
+    Ray ray = getRay(camera);
     ObjectIntersection closest = ObjectIntersection(false, 0.0, vec3(0.0), Material(0, vec3(0.0), vec3(0.0)));
     ObjectIntersection intersection;
 
-    intersection = intersect(sphere, ray);
+    intersection = intersect(sphere1, ray);
     if (intersection.isHitted && (!closest.isHitted || intersection.dist < closest.dist))
         closest = intersection;
 

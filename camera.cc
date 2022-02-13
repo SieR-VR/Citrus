@@ -39,35 +39,34 @@ Ray Camera::getRay(int x, int y)
     return Ray(position, (target_pixel - position).normalize());
 }
 
-void Camera::registerShader(Shader *shader)
+void Camera::registerUniform(Shader *shader)
 {
-    shader->addVariable("camera_position");
-    // shader->addVariable("target");
-    shader->addVariable("camera_direction");
+    shader->addVariable("camera.position");
+    shader->addVariable("camera.direction");
 
-    // shader->addVariable("width");
-    // shader->addVariable("height");
+    shader->addVariable("camera.width");
+    shader->addVariable("camera.height");
 
-    shader->addVariable("fov");
-    shader->addVariable("aspect");
-    shader->addVariable("vp_dist");
+    shader->addVariable("camera.fov");
+    shader->addVariable("camera.aspect");
+    shader->addVariable("camera.vp_dist");
 
-    shader->addVariable("x_direction");
-    shader->addVariable("y_direction");
-    // shader->addVariable("look_up");
+    shader->addVariable("camera.x_direction");
+    shader->addVariable("camera.y_direction");
+}
 
-    shader->setVariable("camera_position", position);
-    // shader->setVariable("target", target);
-    shader->setVariable("camera_direction", direction);
+void Camera::setUniform(Shader *shader)
+{
+    shader->setVariable("camera.position", position);
+    shader->setVariable("camera.direction", direction);
 
-    // shader->setVariable("width", width);
-    // shader->setVariable("height", height);
+    shader->setVariable("camera.width", width);
+    shader->setVariable("camera.height", height);
 
-    shader->setVariable("fov", fov);
-    shader->setVariable("aspect", aspect);
-    shader->setVariable("vp_dist", vp_dist);
+    shader->setVariable("camera.fov", fov);
+    shader->setVariable("camera.aspect", aspect);
+    shader->setVariable("camera.vp_dist", vp_dist);
 
-    shader->setVariable("x_direction", x_direction);
-    shader->setVariable("y_direction", y_direction);
-    // shader->setVariable("look_up", y_direction);
+    shader->setVariable("camera.x_direction", x_direction);
+    shader->setVariable("camera.y_direction", y_direction);
 }

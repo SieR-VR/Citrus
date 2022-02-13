@@ -31,7 +31,8 @@ public:
 
     Ray getRay(int x, int y);
 
-    void registerShader(Shader* shader);
+    void registerUniform(Shader* shader);
+    void setUniform(Shader* shader);
 };
 
 #endif

@@ -37,9 +37,13 @@ Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera)
     std::cout << glGetString(GL_VERSION) << std::endl;
 
     event = new SDL_Event();
+    int res = SDL_SetRelativeMouseMode(SDL_TRUE);
+    if (res != 0)
+        throw std::runtime_error("SDL_SetRelativeMouseMode: " + std::string(SDL_GetError()));
+
     shader = new Shader("shader", "/home/sier/Citrus/shaders/shader.vert", "/home/sier/Citrus/shaders/shader.frag");
-    camera->registerShader(shader);
-    scene->registerShader(shader);
+    camera->registerUniform(shader);
+    scene->registerUniform(shader);
 
     glGenVertexArrays(1, &render_VAO);
     glGenBuffers(1, &render_VBO);
@@ -65,6 +69,9 @@ void Renderer::render()
     glClear(GL_COLOR_BUFFER_BIT);
     
     shader->activate();
+    camera->setUniform(shader);
+    scene->setUniform(shader);
+
     glBindVertexArray(render_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -78,23 +85,59 @@ void Renderer::update()
     {
         if (event->type == SDL_QUIT)
             exit(0);
-
-        if (event->type == SDL_KEYDOWN)
-        {
-            if (event->key.keysym.sym == SDLK_w)
-                camera->position.z -= 10;
-            if (event->key.keysym.sym == SDLK_s)
-                camera->position.z += 10;
-
-            if (event->key.keysym.sym == SDLK_a)
-                camera->position.x -= 10;
-            if (event->key.keysym.sym == SDLK_d)
-                camera->position.x += 10;
-
-            if (event->key.keysym.sym == SDLK_q)
-                camera->position.y -= 10;
-            if (event->key.keysym.sym == SDLK_e)
-                camera->position.y += 10;
-        }
     }
+}
+
+void Renderer::processInput()
+{
+    SDL_PumpEvents();
+    const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
+    const float speed = 0.2;
+
+    if (keyboard[SDL_SCANCODE_ESCAPE])
+        exit(0);
+
+    if (keyboard[SDL_SCANCODE_W])
+        camera->position += Vec(0, 0, -speed);
+    if (keyboard[SDL_SCANCODE_S])
+        camera->position += Vec(0, 0, speed);
+    if (keyboard[SDL_SCANCODE_A])
+        camera->position += Vec(-speed, 0, 0);
+    if (keyboard[SDL_SCANCODE_D])
+        camera->position += Vec(speed, 0, 0);
+    if (keyboard[SDL_SCANCODE_Q])
+        camera->position += Vec(0, -speed, 0);
+    if (keyboard[SDL_SCANCODE_E])
+        camera->position += Vec(0, speed, 0);
+    
+    // SDL_GetMouseState(&xpos, &ypos);
+
+    // if (firstMouse)
+    // {
+    //     lastX = xpos;
+    //     lastY = ypos;
+    //     firstMouse = false;
+    // }
+
+    // float xoffset = xpos - lastX;
+    // float yoffset = lastY - ypos;
+    // lastX = xpos;
+    // lastY = ypos;
+
+    // xoffset *= speed;
+    // yoffset *= speed;
+
+    // yaw += xoffset;
+    // pitch += yoffset;
+
+    // if (pitch > 89.0f)
+    //     pitch = 89.0f;
+    // if (pitch < -89.0f)
+    //     pitch = -89.0f;
+    
+    // Vec direction;
+    // direction.x = cos(yaw) * cos(pitch);
+    // direction.y = sin(pitch);
+    // direction.z = sin(yaw) * cos(pitch);
+    // camera->direction = direction.normalize();
 }

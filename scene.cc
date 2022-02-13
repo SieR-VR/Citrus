@@ -28,10 +28,14 @@ Vec Scene::traceRay(const Ray &ray, int depth)
     return intersection.material.color;
 }
 
-void Scene::registerShader(Shader *shader)
+void Scene::registerUniform(Shader *shader)
 {
     for (auto& object : objects)
-    {
-        shader->setVariable(object.first, (void *)object.second, object.second->getSizeInBytes());
-    }
+        object.second->registerUniform(shader, object.first);
+}
+
+void Scene::setUniform(Shader *shader)
+{
+    for (auto& object : objects)
+        object.second->setUniform(shader, object.first);
 }

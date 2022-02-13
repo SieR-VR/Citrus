@@ -22,7 +22,8 @@ public:
     Object(const Vec& position)
         : position(position) {}
     virtual ObjectIntersection getIntersection(const Ray& ray) = 0;
-    virtual unsigned long getSizeInBytes() = 0;
+    virtual void registerUniform(Shader *shader, const std::string &name) = 0;
+    virtual void setUniform(Shader *shader, const std::string &name) = 0;
 };
 
 #endif

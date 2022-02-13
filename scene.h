@@ -13,7 +13,8 @@ public:
     std::map<std::string, Object*> objects;
 
     void addObject(std::string name, Object* object);
-    void registerShader(Shader *shader);
+    void registerUniform(Shader *shader);
+    void setUniform(Shader *shader);
 
     ObjectIntersection intersect(const Ray& ray);
     Vec traceRay(const Ray& ray, int depth);

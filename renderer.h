@@ -21,10 +21,20 @@ private:
     uint32_t render_VBO;
     uint32_t render_EBO;
 
+    bool firstMouse = true;
+    int lastX;
+    int lastY;
+    int xpos;
+    int ypos;
+
+    float yaw = -90.0f;
+    float pitch = 0.0f;
+
 public:
     Renderer(Scene *scene, Camera *camera);
     void render();
     void update();
+    void processInput();
 };
 
 #endif

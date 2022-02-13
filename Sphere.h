@@ -8,11 +8,12 @@ public:
     float radius;
     Material material;
 
-    Sphere(const Vec& center, float radius, const Material& material)
+    Sphere(std::string name, const Vec& center, float radius, const Material& material)
         : Object(center), radius(radius), material(material) {}
 
     virtual ObjectIntersection getIntersection(const Ray& ray);
-    virtual unsigned long getSizeInBytes();
+    virtual void registerUniform(Shader *shader, const std::string &name);
+    virtual void setUniform(Shader *shader, const std::string &name);
 };
 
 #endif
