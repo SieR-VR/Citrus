@@ -27,6 +27,16 @@ Camera::Camera(const Vec &position,
     y_direction = x_direction.cross(direction).normalize();
 }
 
+void Camera::updateTransform(const Vec &position, const Vec &direction) {
+    this->position = position;
+    this->direction = direction;
+
+    Vec up = Vec(0.f, 1.f, 0.f);
+
+    x_direction = direction.cross(up).normalize();
+    y_direction = x_direction.cross(direction).normalize();
+}
+
 Ray Camera::getRay(int x, int y)
 {
     Vec center = position + direction * vp_dist;

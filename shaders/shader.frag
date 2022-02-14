@@ -1,4 +1,4 @@
-#version 300 es
+#version 460 core
 
 #ifdef GL_ES
 precision highp float;
@@ -8,9 +8,7 @@ precision highp float;
 #define EPSILON 0.001f
 
 struct Material {
-    int type;
     vec3 color;
-    vec3 emission;
 };
 
 struct ObjectIntersection {
@@ -98,7 +96,7 @@ ObjectIntersection intersect(Sphere sphere, Ray ray) {
 
 void main() {
     Ray ray = getRay(camera);
-    ObjectIntersection closest = ObjectIntersection(false, 0.0, vec3(0.0), Material(0, vec3(0.0), vec3(0.0)));
+    ObjectIntersection closest = ObjectIntersection(false, 0.0, vec3(0.0), Material(vec3(0.0)));
     ObjectIntersection intersection;
 
     intersection = intersect(sphere1, ray);

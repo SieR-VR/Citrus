@@ -1,0 +1,6 @@
+[submodule "Core/ext/SDL2"]
+	path = Core/ext/SDL2
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "Core/ext/SDL_image"]
+	path = Core/ext/SDL_image
+	url = https://github.com/libsdl-org/SDL_image.git

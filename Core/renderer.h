@@ -1,6 +1,8 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
 
+#include <SDL.h>
+
 #include "scene.h"
 #include "camera.h"
 #include "shader.h"
@@ -14,6 +16,7 @@ private:
 
     SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_GLContext context;
     SDL_Texture *texture;
     SDL_Event *event;
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <GL/glew.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "renderer.h"
 
@@ -23,9 +23,13 @@ Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera)
 {
     SDL_Init(SDL_INIT_VIDEO);
 
-    window = SDL_CreateWindow("Raytracer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera->width, camera->height, 0);
+    window = SDL_CreateWindow("Raytracer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera->width, camera->height, SDL_WINDOW_OPENGL);
     if (!window)
         throw std::runtime_error("SDL_CreateWindow: " + std::string(SDL_GetError()));
+
+    context = SDL_GL_CreateContext(window);
+    if (!context)
+        throw std::runtime_error("SDL_GL_CreateContext: " + std::string(SDL_GetError()));
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer)
@@ -34,14 +38,13 @@ Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera)
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, camera->width, camera->height);
 
     glewInit();
-    std::cout << glGetString(GL_VERSION) << std::endl;
 
     event = new SDL_Event();
     int res = SDL_SetRelativeMouseMode(SDL_TRUE);
     if (res != 0)
         throw std::runtime_error("SDL_SetRelativeMouseMode: " + std::string(SDL_GetError()));
 
-    shader = new Shader("shader", "/home/sier/Citrus/shaders/shader.vert", "/home/sier/Citrus/shaders/shader.frag");
+    shader = new Shader("shader", "../../shaders/shader.vert", "../../shaders/shader.frag");
     camera->registerUniform(shader);
     scene->registerUniform(shader);
 
@@ -92,52 +95,56 @@ void Renderer::processInput()
 {
     SDL_PumpEvents();
     const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
-    const float speed = 0.2;
+    const float speed = 1.0f;
 
     if (keyboard[SDL_SCANCODE_ESCAPE])
         exit(0);
 
+    Vec position = camera->position;
+    Vec currentDirection = camera->direction;
+
     if (keyboard[SDL_SCANCODE_W])
-        camera->position += Vec(0, 0, -speed);
+        position += currentDirection * speed;
     if (keyboard[SDL_SCANCODE_S])
-        camera->position += Vec(0, 0, speed);
+        position += currentDirection * -speed;
     if (keyboard[SDL_SCANCODE_A])
-        camera->position += Vec(-speed, 0, 0);
+        position += currentDirection.cross(Vec(0, 1, 0)) * -speed;
     if (keyboard[SDL_SCANCODE_D])
-        camera->position += Vec(speed, 0, 0);
+        position += currentDirection.cross(Vec(0, 1, 0)) * speed;
     if (keyboard[SDL_SCANCODE_Q])
-        camera->position += Vec(0, -speed, 0);
+        position += currentDirection.cross(Vec(0, 0, 1)) * speed;
     if (keyboard[SDL_SCANCODE_E])
-        camera->position += Vec(0, speed, 0);
+        position += currentDirection.cross(Vec(0, 0, 1)) * -speed;
     
-    // SDL_GetMouseState(&xpos, &ypos);
+    SDL_GetMouseState(&xpos, &ypos);
 
-    // if (firstMouse)
-    // {
-    //     lastX = xpos;
-    //     lastY = ypos;
-    //     firstMouse = false;
-    // }
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
 
-    // float xoffset = xpos - lastX;
-    // float yoffset = lastY - ypos;
-    // lastX = xpos;
-    // lastY = ypos;
+    float xoffset = float(xpos - lastX);
+    float yoffset = float(ypos - lastY);
+    lastX = xpos;
+    lastY = ypos;
 
-    // xoffset *= speed;
-    // yoffset *= speed;
+    xoffset *= 0.1f;
+    yoffset *= 0.1f;
 
-    // yaw += xoffset;
-    // pitch += yoffset;
+    yaw += xoffset;
+    pitch += yoffset;
 
-    // if (pitch > 89.0f)
-    //     pitch = 89.0f;
-    // if (pitch < -89.0f)
-    //     pitch = -89.0f;
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
     
-    // Vec direction;
-    // direction.x = cos(yaw) * cos(pitch);
-    // direction.y = sin(pitch);
-    // direction.z = sin(yaw) * cos(pitch);
-    // camera->direction = direction.normalize();
+    Vec direction;
+    direction.x = std::cos(yaw / 180.f * M_PI) * std::cos(pitch / 180.f * M_PI);
+    direction.y = std::sin(pitch / 180.f * M_PI);
+    direction.z = std::sin(yaw / 180.f * M_PI) * std::cos(pitch / 180.f * M_PI);
+    
+    camera->updateTransform(position, direction);
 }

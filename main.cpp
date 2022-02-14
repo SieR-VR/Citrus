@@ -1,11 +1,10 @@
 #include <iostream>
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
 
-#include "renderer.h"
-#include "Sphere.h"
+#include "Core/renderer.h"
+#include "Core/Sphere.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     Vec origin(0, 0, 250);
     Vec dest(0, 0, 0);
 
@@ -16,16 +15,23 @@ int main(int argc, char *argv[]) {
     scene.addObject("sphere2", new Sphere("sphere2", Vec(0, -100.5, -1), 100, Material()));
     scene.addObject("sphere3", new Sphere("sphere3", Vec(300, 0, 0), 100, Material()));
 
-    Renderer renderer(&scene, &camera);
-    
-    try {
-        for (;;) {
+    try
+    {
+        Renderer renderer(&scene, &camera);
+
+        std::cout << "Rendering..." << std::endl;
+
+        for (;;)
+        {
             renderer.render();
             renderer.update();
             renderer.processInput();
         }
     }
-    catch (std::runtime_error &e) {
-        std::cerr << e.what() << std::endl;
+    catch (std::runtime_error &e)
+    {
+        std::cout << e.what() << std::endl;
     }
+
+    return 0;
 }

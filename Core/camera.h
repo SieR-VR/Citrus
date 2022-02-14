@@ -29,6 +29,7 @@ public:
         const float& fov,
         const float& vp_dist);
 
+    void Camera::updateTransform(const Vec &position, const Vec &direction);
     Ray getRay(int x, int y);
 
     void registerUniform(Shader* shader);

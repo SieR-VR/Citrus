@@ -1,2 +1,5 @@
-#CMake result
+# CMake result
 build
+
+# dependencies
+Core/ext/glew
