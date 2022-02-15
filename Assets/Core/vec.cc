@@ -3,6 +3,11 @@
 
 #include "vec.h"
 
+float drand48()
+{
+    return (float)rand() / RAND_MAX;
+}
+
 Vec2::Vec2() : x(0), y(0) {}
 
 Vec2::Vec2(float x, float y) : x(x), y(y) {}
@@ -37,6 +42,10 @@ Vec3 Vec3::operator+(const Vec3& v) const {
 
 Vec3 Vec3::operator-(const Vec3& v) const {
     return Vec3(this->x - v.x, this->y - v.y, this->z - v.z);
+}
+
+Vec3 Vec3::operator*(const Vec3& v) const {
+    return Vec3(this->x * v.x, this->y * v.y, this->z * v.z);
 }
 
 Vec3 Vec3::operator*(float s) const {
@@ -115,4 +124,33 @@ Vec4 Vec4::normalize() const {
     float length = this->getLength();
     if (length == 0) throw std::runtime_error("Vec4::normalize: Division by zero");
     return Vec4(this->x / length, this->y / length, this->z / length, this->w / length);
+}
+
+Vec3 randomInUnitSphere() {
+    Vec3 p;
+    do {
+        p = Vec3(drand48(), drand48(), drand48()) * 2.0f - Vec3(1, 1, 1);
+    } while (p.dot(p) >= 1.0f);
+    return p;
+}
+
+Vec3 reflect(const Vec3& v, const Vec3& n) {
+    return v - n * 2.0f * v.dot(n);
+}
+
+bool refract(const Vec3& v, const Vec3& n, float ni_over_nt, Vec3& refracted) {
+    Vec3 uv = v.normalize();
+    float dt = uv.dot(n);
+    float discriminant = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
+    if (discriminant > 0.0f) {
+        refracted = (uv - n * dt) * ni_over_nt - n * std::sqrt(discriminant);
+        return true;
+    }
+    return false;
+}
+
+float schlick(float cosine, float ref_idx) {
+    float r0 = (1.0f - ref_idx) / (1.0f + ref_idx);
+    r0 = r0 * r0;
+    return r0 + (1-r0)*pow((1-cosine), 5);
 }

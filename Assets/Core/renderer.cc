@@ -1,13 +1,9 @@
-#include <iostream>
 #include <cmath>
+#include <stdexcept>
 #include <GL/glew.h>
 #include <SDL.h>
 
 #include "renderer.h"
-
-inline float clamp(float x) { return x < 0 ? 0 : x > 1 ? 1
-                                                       : x; }
-inline int toInt(float x) { return int(clamp(x) * 255 + .5); }
 
 float vertices[] = {
     -1, -1, 
@@ -30,12 +26,6 @@ Renderer::Renderer(Scene *scene, Camera *camera) : scene(scene), camera(camera)
     context = SDL_GL_CreateContext(window);
     if (!context)
         throw std::runtime_error("SDL_GL_CreateContext: " + std::string(SDL_GetError()));
-
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer)
-        throw std::runtime_error("SDL_CreateRenderer: " + std::string(SDL_GetError()));
-
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, camera->width, camera->height);
 
     glewInit();
 
@@ -88,50 +78,46 @@ void Renderer::update()
     {
         if (event->type == SDL_QUIT)
             exit(0);
+
+        if (event->type == SDL_MOUSEMOTION)
+            processMouseMovement(event->motion.xrel, event->motion.yrel);
     }
+
+    processKeyDown();
 }
 
-void Renderer::processInput()
+void Renderer::processKeyDown()
 {
     SDL_PumpEvents();
-    const Uint8 *keyboard = SDL_GetKeyboardState(NULL);
-    const float speed = 1.0f;
-
-    if (keyboard[SDL_SCANCODE_ESCAPE])
-        exit(0);
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    const float speed = 0.1f;
 
     Vec position = camera->position;
     Vec currentDirection = camera->direction;
 
-    if (keyboard[SDL_SCANCODE_W])
+    if (state[SDL_SCANCODE_W])
         position += currentDirection * speed;
-    if (keyboard[SDL_SCANCODE_S])
-        position += currentDirection * -speed;
-    if (keyboard[SDL_SCANCODE_A])
-        position += currentDirection.cross(Vec(0, 1, 0)) * -speed;
-    if (keyboard[SDL_SCANCODE_D])
-        position += currentDirection.cross(Vec(0, 1, 0)) * speed;
-    if (keyboard[SDL_SCANCODE_Q])
-        position += currentDirection.cross(Vec(0, 0, 1)) * speed;
-    if (keyboard[SDL_SCANCODE_E])
-        position += currentDirection.cross(Vec(0, 0, 1)) * -speed;
-    
-    SDL_GetMouseState(&xpos, &ypos);
+    if (state[SDL_SCANCODE_S])
+        position -= currentDirection * speed;
+    if (state[SDL_SCANCODE_A])
+        position -= currentDirection.cross(Vec(0, 1, 0)).normalize() * speed;
+    if (state[SDL_SCANCODE_D])
+        position += currentDirection.cross(Vec(0, 1, 0)).normalize() * speed;
+    if (state[SDL_SCANCODE_Q])
+        position -= Vec(0, 1, 0) * speed;
+    if (state[SDL_SCANCODE_E])
+        position += Vec(0, 1, 0) * speed;
 
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
+    camera->updatePosition(position);
+}
 
-    float xoffset = float(xpos - lastX);
-    float yoffset = float(ypos - lastY);
-    lastX = xpos;
-    lastY = ypos;
+void Renderer::processMouseMovement(int xrel, int yrel)
+{
+    float xoffset = xrel;
+    float yoffset = yrel;
 
     xoffset *= 0.1f;
-    yoffset *= 0.1f;
+    yoffset *= -0.1f;
 
     yaw += xoffset;
     pitch += yoffset;
@@ -146,5 +132,5 @@ void Renderer::processInput()
     direction.y = std::sin(pitch / 180.f * M_PI);
     direction.z = std::sin(yaw / 180.f * M_PI) * std::cos(pitch / 180.f * M_PI);
     
-    camera->updateTransform(position, direction);
+    camera->updateDirection(direction);
 }

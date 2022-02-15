@@ -15,9 +15,7 @@ private:
     Shader *shader;
 
     SDL_Window *window;
-    SDL_Renderer *renderer;
     SDL_GLContext context;
-    SDL_Texture *texture;
     SDL_Event *event;
 
     uint32_t render_VAO;
@@ -37,7 +35,8 @@ public:
     Renderer(Scene *scene, Camera *camera);
     void render();
     void update();
-    void processInput();
+    void processKeyDown();
+    void processMouseMovement(int x, int y);
 };
 
 #endif

@@ -16,8 +16,8 @@ public:
     void registerUniform(Shader *shader);
     void setUniform(Shader *shader);
 
-    ObjectIntersection intersect(const Ray& ray);
-    Vec traceRay(const Ray& ray, int depth);
+    bool hit(const Ray& ray, float tMin, float tMax, HitRecord& record);
+    bool traceRay(const Ray& ray, Color& color, Ray& scattered);
 };
 
 #endif

@@ -21,6 +21,8 @@ public:
     float getLength() const;
     Vec3 operator+(const Vec3 &v) const;
     Vec3 operator-(const Vec3 &v) const;
+    Vec3 operator*(const Vec3 &v) const;
+    Vec3 operator/(const Vec3 &v) const;
     Vec3 operator*(float s) const;
     Vec3 operator/(float s) const;
     Vec3 operator-() const;
@@ -49,5 +51,11 @@ public:
 typedef Vec3 Color;
 typedef Vec3 Point;
 typedef Vec3 Vec;
+
+float drand48();
+Vec3 randomInUnitSphere();
+Vec3 reflect(const Vec3 &v, const Vec3 &n);
+bool refract(const Vec3 &v, const Vec3 &n, float niOverNt, Vec3 &refracted);
+float schlick(float cosine, float refIdx);
 
 #endif

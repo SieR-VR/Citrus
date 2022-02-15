@@ -27,26 +27,32 @@ Camera::Camera(const Vec &position,
     y_direction = x_direction.cross(direction).normalize();
 }
 
-void Camera::updateTransform(const Vec &position, const Vec &direction) {
-    this->position = position;
-    this->direction = direction;
+Ray Camera::getRay(const int &x, const int &y) const
+{
+    Vec center = position + direction * vp_dist;
+    float vp_width = 2.f * tan(fov / 2.f) * vp_dist;
+    float vp_height = vp_width / 1. / aspect;
 
+    Vec start_pixel = center - x_direction * vp_width / 2.f +
+                          y_direction * vp_height / 2.f;
+    Vec target_pixel = start_pixel + x_direction * x /
+                                          static_cast<float>(width) * vp_width -
+                                      y_direction * y /
+                                          static_cast<float>(height) * vp_height; 
+
+    return Ray(position, (target_pixel - position).normalize());
+}
+
+void Camera::updatePosition(const Vec &position) {
+    this->position = position;
+}
+
+void Camera::updateDirection(const Vec &direction) {
+    this->direction = direction;
     Vec up = Vec(0.f, 1.f, 0.f);
 
     x_direction = direction.cross(up).normalize();
     y_direction = x_direction.cross(direction).normalize();
-}
-
-Ray Camera::getRay(int x, int y)
-{
-    Vec center = position + direction * vp_dist;
-    double vp_width = 2 * vp_dist * std::tan((fov / 2) * M_PI / 180.0);
-    double vp_height = 1. / aspect * vp_width;
-
-    Vec start_pixel = center - x_direction * (vp_width / 2) + y_direction * (vp_height / 2);
-    Vec target_pixel = start_pixel + x_direction * (vp_width * (x + 0.5) / width) - y_direction * (vp_height * (y + 0.5) / height);
-
-    return Ray(position, (target_pixel - position).normalize());
 }
 
 void Camera::registerUniform(Shader *shader)
@@ -63,6 +69,8 @@ void Camera::registerUniform(Shader *shader)
 
     shader->addVariable("camera.x_direction");
     shader->addVariable("camera.y_direction");
+
+    shader->addVariable("camera.samples");
 }
 
 void Camera::setUniform(Shader *shader)
@@ -79,4 +87,6 @@ void Camera::setUniform(Shader *shader)
 
     shader->setVariable("camera.x_direction", x_direction);
     shader->setVariable("camera.y_direction", y_direction);
+
+    shader->setVariable("camera.samples", 16);
 }

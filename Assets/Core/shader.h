@@ -15,8 +15,6 @@ public:
 
     template<typename T>
     void setVariable(const std::string &name, const T &value);
-    template<typename T>
-    void setVariable(const std::string &name, const T *value, const unsigned long &count);
 
     std::string getName() const { return name; }
 

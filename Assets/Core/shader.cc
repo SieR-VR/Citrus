@@ -141,9 +141,3 @@ void Shader::setVariable<int>(const std::string &name, const int& value)
 {
     glUniform1i(variables[name], value);
 }
-
-template<>
-void Shader::setVariable<void>(const std::string &name, const void *value, const unsigned long &count)
-{
-    glUniform1fv(variables[name], (count - 8) / 4, &((const GLfloat *)value)[2]);
-}
