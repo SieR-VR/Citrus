@@ -8,3 +8,7 @@ Assets/Core/ext/SDL2_image
 
 # VSCode auto-generated
 .vscode/settings.json
+
+# Added by cargo
+
+/target
