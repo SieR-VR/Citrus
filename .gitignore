@@ -1,10 +1,1 @@
-# CMake result
-build
-
-# dependencies
-Assets/Core/ext/glew
-Assets/Core/ext/SDL2
-Assets/Core/ext/SDL2_image
-
-# VSCode auto-generated
-.vscode/settings.json
+/target

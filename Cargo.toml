@@ -1,0 +1,13 @@
+[package]
+name = "citrus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+citrus_core = { path = "./citrus_core" }
+tokio = { version = "1", features = ["full"] }
+
+[workspace]
+members = [
+    "citrus_core/"
+]
