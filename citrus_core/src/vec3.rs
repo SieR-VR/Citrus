@@ -6,8 +6,8 @@ pub struct Vec3 {
     pub z: f32,
 }
 
-type Point3 = Vec3;
-type Color3 = Vec3;
+pub type Point3 = Vec3;
+pub type Color3 = Vec3;
 
 impl Vec3 {
     pub fn new() -> Vec3 {
@@ -115,7 +115,10 @@ impl Div<f32> for Vec3 {
 
 impl DivAssign<f32> for Vec3 {
     fn div_assign(&mut self, rhs: f32) {
-        let inv: f32 = 1.0f32 / rhs;s
-        *self *= inv;
+        let inv: f32 = 1.0f32 / rhs;
+        
+        self.x *= inv;
+        self.y *= inv;
+        self.z *= inv;
     }
 }
