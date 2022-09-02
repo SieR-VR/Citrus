@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, Neg, Div, MulAssign, DivAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -12,7 +12,11 @@ pub type Color3 = Vec3;
 
 impl Vec3 {
     pub fn new() -> Vec3 {
-        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
     pub fn from_value(x: f32, y: f32, z: f32) -> Vec3 {
@@ -66,7 +70,7 @@ impl SubAssign for Vec3 {
         self.y -= rhs.y;
         self.z -= rhs.z;
     }
-} 
+}
 
 impl Mul<f32> for Vec3 {
     type Output = Self;
@@ -104,8 +108,8 @@ impl Div<f32> for Vec3 {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        let inv: f32 = 1.0f32 / rhs;    
-    
+        let inv: f32 = 1.0f32 / rhs;
+
         Self {
             x: self.x * inv,
             y: self.y * inv,
@@ -117,9 +121,18 @@ impl Div<f32> for Vec3 {
 impl DivAssign<f32> for Vec3 {
     fn div_assign(&mut self, rhs: f32) {
         let inv: f32 = 1.0f32 / rhs;
-        
+
         self.x *= inv;
         self.y *= inv;
         self.z *= inv;
     }
+}
+
+pub fn write_color(pixel_color: Color3) {
+    println!(
+        "{} {} {}",
+        (pixel_color.x * 255.999) as i32,
+        (pixel_color.y * 255.999) as i32,
+        (pixel_color.z * 255.999) as i32
+    );
 }
