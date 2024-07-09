@@ -6,9 +6,7 @@ pub fn render_ray(ray: &Ray, world: &World, depth: i32, eps: f32) -> Vec3 {
     }
 
     let rec = world.hit(ray, eps, f32::INFINITY);
-    if rec.is_some() {
-        let rec = rec.unwrap();
-
+    if let Some(rec) = rec {
         if let Some((attenuation, scattered)) = rec.material.scatter(ray, &rec) {
             render_ray(&scattered, world, depth - 1, eps) * attenuation
         } else {

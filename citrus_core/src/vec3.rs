@@ -35,6 +35,14 @@ impl Vec3 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
+    pub fn cross(&self, rhs: &Vec3) -> Vec3 {
+        Vec3 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+        }
+    }
+
     pub fn to_unit(&self) -> Vec3 {
         *self / self.length()
     }

@@ -28,6 +28,15 @@ pub fn random_in_unit_sphere() -> vec3::Vec3 {
     }
 }
 
+pub fn random_in_unit_disk() -> vec3::Vec3 {
+    loop {
+        let p = vec3::Vec3::from_value(rand::random::<f32>(), rand::random::<f32>(), 0.0) * 2.0 - vec3::Vec3::from_value(1.0, 1.0, 0.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
 pub fn reflect(v: &vec3::Vec3, n: &vec3::Vec3) -> vec3::Vec3 {
     *v - *n * v.dot(n) * 2.0
 }
@@ -38,4 +47,9 @@ pub fn refract(uv: &vec3::Vec3, n: &vec3::Vec3, etai_over_etat: f32) -> vec3::Ve
     let r_out_parallel = *n * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
 
     r_out_perp + r_out_parallel
+}
+
+pub fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
+    let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
+    r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }

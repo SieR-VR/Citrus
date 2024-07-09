@@ -70,11 +70,20 @@ impl Material for Dielectric {
         };
 
         let unit_direction = ray_in.direction.to_unit();
-        let refracted = refract(&unit_direction, &rec.normal, etai_over_etat);
+        let cos_theta = f32::min(-unit_direction.dot(&rec.normal), 1.0);
+        let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
+
+        let cannot_refract = etai_over_etat * sin_theta > 1.0;
+        let direction =
+            if cannot_refract || reflectance(cos_theta, etai_over_etat) > rand::random::<f32>() {
+                reflect(&unit_direction, &rec.normal)
+            } else {
+                refract(&unit_direction, &rec.normal, etai_over_etat)
+            };
 
         let scattered = ray::Ray {
             origin: rec.point,
-            direction: refracted,
+            direction,
         };
 
         Some((vec3::Color3::from_value(1.0, 1.0, 1.0), scattered))
