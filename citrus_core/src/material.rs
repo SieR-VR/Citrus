@@ -5,11 +5,11 @@ pub trait Material {
         &self,
         ray_in: &Ray,
         rec: &hittable::HitRecord,
-    ) -> Option<(vec3::Color3, Ray)>;
+    ) -> Option<(Vec3, Ray)>;
 }
 
 pub struct Lambertian {
-    pub albedo: vec3::Color3,
+    pub albedo: Vec3,
 }
 
 impl Material for Lambertian {
@@ -17,7 +17,7 @@ impl Material for Lambertian {
         &self,
         _ray_in: &Ray,
         rec: &hittable::HitRecord,
-    ) -> Option<(vec3::Color3, Ray)> {
+    ) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
@@ -29,7 +29,7 @@ impl Material for Lambertian {
 }
 
 pub struct Metal {
-    pub albedo: vec3::Color3,
+    pub albedo: Vec3,
     pub fuzz: f32,
 }
 
@@ -38,7 +38,7 @@ impl Material for Metal {
         &self,
         ray_in: &Ray,
         rec: &hittable::HitRecord,
-    ) -> Option<(vec3::Color3, Ray)> {
+    ) -> Option<(Vec3, Ray)> {
         let reflected = reflect(&ray_in.direction.to_unit(), &rec.normal);
         let scattered = Ray {
             origin: rec.point,
@@ -58,7 +58,7 @@ impl Material for Dielectric {
         &self,
         ray_in: &Ray,
         rec: &hittable::HitRecord,
-    ) -> Option<(vec3::Color3, Ray)> {
+    ) -> Option<(Vec3, Ray)> {
         let etai_over_etat = if rec.front_face {
             1.0 / self.refraction_index
         } else {
@@ -82,6 +82,6 @@ impl Material for Dielectric {
             direction,
         };
 
-        Some((vec3::Color3::from_value(1.0, 1.0, 1.0), scattered))
+        Some((Vec3::from_value(1.0, 1.0, 1.0), scattered))
     }
 }

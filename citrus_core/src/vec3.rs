@@ -1,17 +1,14 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
-pub type Point3 = Vec3;
-pub type Color3 = Vec3;
-
 impl Vec3 {
-    pub fn new() -> Vec3 {
+    pub fn zero() -> Vec3 {
         Vec3 {
             x: 0.0,
             y: 0.0,
@@ -193,13 +190,4 @@ impl DivAssign<f32> for Vec3 {
         self.y *= inv;
         self.z *= inv;
     }
-}
-
-pub fn write_color(pixel_color: Color3) {
-    println!(
-        "{} {} {}",
-        (pixel_color.x * 255.999) as i32,
-        (pixel_color.y * 255.999) as i32,
-        (pixel_color.z * 255.999) as i32
-    );
 }

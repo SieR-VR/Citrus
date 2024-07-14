@@ -1,11 +1,11 @@
 use std::{fs::File, io::BufWriter, path::Path, rc::Rc};
 
 use citrus_core::{
+    *,
     camera::Camera,
     material::{Dielectric, Lambertian, Material, Metal},
     render_ray::render_ray,
     sphere::Sphere,
-    vec3::*,
     world::World,
 };
 
@@ -18,7 +18,7 @@ fn main() {
     let path = Path::new("output.png");
     let file = File::create(path).unwrap();
 
-    let ref mut writer = BufWriter::new(file);
+    let writer = &mut BufWriter::new(file);
     let mut encoder = png::Encoder::new(writer, IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
     encoder.set_color(png::ColorType::Rgb);
     encoder.set_depth(png::BitDepth::Eight);
@@ -34,13 +34,13 @@ fn main() {
 
     let mut writer = encoder.write_header().unwrap();
 
-    let mut world = World::new();
+    let mut world = World::default();
 
     world.add(Box::new(Sphere {
-        center: Point3::from_value(0.0, -1000.0, 0.0),
+        center: Vec3::from_value(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Rc::new(Lambertian {
-            albedo: Color3::from_value(0.5, 0.5, 0.5),
+            albedo: Vec3::from_value(0.5, 0.5, 0.5),
         }),
     }));
 
@@ -48,14 +48,14 @@ fn main() {
         for j in -11..11 {
             let material: Rc<dyn Material> = match rand::random::<f32>() {
                 x if x < 0.8 => Rc::new(Lambertian {
-                    albedo: Color3::from_value(
+                    albedo: Vec3::from_value(
                         rand::random::<f32>() * rand::random::<f32>(),
                         rand::random::<f32>() * rand::random::<f32>(),
                         rand::random::<f32>() * rand::random::<f32>(),
                     ),
                 }),
                 x if x < 0.95 => Rc::new(Metal {
-                    albedo: Color3::from_value(
+                    albedo: Vec3::from_value(
                         0.5 * (1.0 + rand::random::<f32>()),
                         0.5 * (1.0 + rand::random::<f32>()),
                         0.5 * (1.0 + rand::random::<f32>()),
@@ -65,7 +65,7 @@ fn main() {
                 _ => Rc::new(Dielectric { refraction_index: 1.5 }),
             };
 
-            let center = Point3::from_value(
+            let center = Vec3::from_value(
                 i as f32 + 0.9 * rand::random::<f32>(),
                 0.2,
                 j as f32 + 0.9 * rand::random::<f32>(),
@@ -80,24 +80,24 @@ fn main() {
     }
 
     world.add(Box::new(Sphere {
-        center: Point3::from_value(0.0, 1.0, 0.0),
+        center: Vec3::from_value(0.0, 1.0, 0.0),
         radius: 1.0,
         material: Rc::new(Dielectric { refraction_index: 1.5 }),
     }));
 
     world.add(Box::new(Sphere {
-        center: Point3::from_value(-4.0, 1.0, 0.0),
+        center: Vec3::from_value(-4.0, 1.0, 0.0),
         radius: 1.0,
         material: Rc::new(Lambertian {
-            albedo: Color3::from_value(0.4, 0.2, 0.1),
+            albedo: Vec3::from_value(0.4, 0.2, 0.1),
         }),
     }));
 
     world.add(Box::new(Sphere {
-        center: Point3::from_value(4.0, 1.0, 0.0),
+        center: Vec3::from_value(4.0, 1.0, 0.0),
         radius: 1.0,
         material: Rc::new(Metal {
-            albedo: Color3::from_value(0.7, 0.6, 0.5),
+            albedo: Vec3::from_value(0.7, 0.6, 0.5),
             fuzz: 0.0,
         }),
     }));
@@ -105,13 +105,13 @@ fn main() {
     let camera = Camera::new(
         IMAGE_WIDTH as f32 / IMAGE_HEIGHT as f32,
         20.0,
-        Point3::from_value(13.0, 2.0, 3.0),
+        Vec3::from_value(13.0, 2.0, 3.0),
     );
 
     let mut image_data: Vec<u8> = Vec::new();
     for i in 0..IMAGE_HEIGHT {
         for j in 0..IMAGE_WIDTH {
-            let mut pixel_color = Color3::new();
+            let mut pixel_color = Vec3::zero();
 
             for _ in 0..SAMPLES_PER_PIXEL {
                 let ray = camera.get_ray(

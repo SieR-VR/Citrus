@@ -1,4 +1,4 @@
-use crate::{hittable::Hittable, ray::Ray, vec3::Vec3, world::World};
+use crate::{hittable::Hittable, world::World, *};
 
 pub fn render_ray(ray: &Ray, world: &World, depth: i32, eps: f32) -> Vec3 {
     if depth <= 0 {

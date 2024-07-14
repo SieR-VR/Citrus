@@ -1,4 +1,4 @@
-use crate::{vec3::*, *};
+use crate::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Camera {
@@ -8,8 +8,8 @@ pub struct Camera {
 
     pub v_fov: f32,
 
-    pub lookfrom: Point3,
-    pub lookat: Point3,
+    pub lookfrom: Vec3,
+    pub lookat: Vec3,
     pub v_up: Vec3,
 
     pub defocus_angle: f32,
@@ -21,11 +21,11 @@ pub struct Camera {
     defocus_disk_u: Vec3,
     defocus_disk_v: Vec3,
 
-    viewport_upper_left: Point3,
+    viewport_upper_left: Vec3,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, v_fov: f32, origin: Point3) -> Camera {
+    pub fn new(aspect_ratio: f32, v_fov: f32, origin: Vec3) -> Camera {
         let focus_dist = 10.0;
 
         let theta = v_fov.to_radians();
@@ -34,7 +34,7 @@ impl Camera {
         let viewport_height = 2.0 * h * focus_dist;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let lookat = Point3::from_value(0.0, 0.0, 0.0);
+        let lookat = Vec3::from_value(0.0, 0.0, 0.0);
         let v_up = Vec3::from_value(0.0, 1.0, 0.0);
 
         let w = (origin - lookat).to_unit();

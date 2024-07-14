@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::*;
 
 pub struct Sphere {
-    pub center: vec3::Point3,
+    pub center: Vec3,
     pub radius: f32,
 
     pub material: Rc<dyn material::Material>,
