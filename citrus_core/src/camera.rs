@@ -86,10 +86,12 @@ impl Camera {
         };
 
         let direction = (pixel_sample - origin).to_unit();
+        let time = rand::random::<f32>();
 
         ray::Ray::new(
             origin,
             direction,
+            Some(time),
         )
     }
 
