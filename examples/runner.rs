@@ -1,19 +1,17 @@
-use std::{fs::File, io::BufWriter, path::Path, rc::Rc};
+use std::sync::Arc;
+use std::thread;
+use std::{fs::File, io::BufWriter, path::Path};
 
 use citrus_core::{
-    *,
-    camera::Camera,
-    material::{Dielectric, Lambertian, Material, Metal},
-    render_ray::render_ray,
-    sphere::Sphere,
-    world::World,
+    camera::Camera, hittable::*, material::*, render_ray::render_ray, world::World, *,
 };
 
 fn main() {
     const IMAGE_WIDTH: i32 = 1280;
     const IMAGE_HEIGHT: i32 = 720;
     const SAMPLES_PER_PIXEL: i32 = 16;
-    const MAX_DEPTH: i32 = 8;
+    const MAX_DEPTH: i32 = 16;
+    const NUM_THREADS: i32 = 8;
 
     let path = Path::new("output.png");
     let file = File::create(path).unwrap();
@@ -36,25 +34,25 @@ fn main() {
 
     let mut world = World::default();
 
-    world.add(Box::new(Sphere {
-        center: Vec3::from_value(0.0, -1000.0, 0.0),
-        radius: 1000.0,
-        material: Rc::new(Lambertian {
+    world.add(Box::new(Sphere::new(
+        Vec3::from_value(0.0, -1000.0, 0.0),
+        1000.0,
+        Box::new(Lambertian {
             albedo: Vec3::from_value(0.5, 0.5, 0.5),
         }),
-    }));
+    )));
 
     for i in -11..11 {
         for j in -11..11 {
-            let material: Rc<dyn Material> = match rand::random::<f32>() {
-                x if x < 0.8 => Rc::new(Lambertian {
+            let material: Box<dyn Material + Send + Sync> = match rand::random::<f32>() {
+                x if x < 0.8 => Box::new(Lambertian {
                     albedo: Vec3::from_value(
                         rand::random::<f32>() * rand::random::<f32>(),
                         rand::random::<f32>() * rand::random::<f32>(),
                         rand::random::<f32>() * rand::random::<f32>(),
                     ),
                 }),
-                x if x < 0.95 => Rc::new(Metal {
+                x if x < 0.95 => Box::new(Metal {
                     albedo: Vec3::from_value(
                         0.5 * (1.0 + rand::random::<f32>()),
                         0.5 * (1.0 + rand::random::<f32>()),
@@ -62,7 +60,9 @@ fn main() {
                     ),
                     fuzz: 0.5 * rand::random::<f32>(),
                 }),
-                _ => Rc::new(Dielectric { refraction_index: 1.5 }),
+                _ => Box::new(Dielectric {
+                    refraction_index: 1.5,
+                }),
             };
 
             let center = Vec3::from_value(
@@ -71,36 +71,36 @@ fn main() {
                 j as f32 + 0.9 * rand::random::<f32>(),
             );
 
-            world.add(Box::new(Sphere {
-                center,
-                radius: 0.2,
-                material: material.clone(),
-            }));
+            let sphere = Sphere::moving(center, 0.2, material, Vec3::from_value(0.0, 0.5, 0.0));
+
+            world.add(Box::new(sphere));
         }
     }
 
-    world.add(Box::new(Sphere {
-        center: Vec3::from_value(0.0, 1.0, 0.0),
-        radius: 1.0,
-        material: Rc::new(Dielectric { refraction_index: 1.5 }),
-    }));
+    world.add(Box::new(Sphere::new(
+        Vec3::from_value(0.0, 1.0, 0.0),
+        1.0,
+        Box::new(Dielectric {
+            refraction_index: 1.5,
+        }),
+    )));
 
-    world.add(Box::new(Sphere {
-        center: Vec3::from_value(-4.0, 1.0, 0.0),
-        radius: 1.0,
-        material: Rc::new(Lambertian {
+    world.add(Box::new(Sphere::new(
+        Vec3::from_value(-4.0, 1.0, 0.0),
+        1.0,
+        Box::new(Lambertian {
             albedo: Vec3::from_value(0.4, 0.2, 0.1),
         }),
-    }));
+    )));
 
-    world.add(Box::new(Sphere {
-        center: Vec3::from_value(4.0, 1.0, 0.0),
-        radius: 1.0,
-        material: Rc::new(Metal {
+    world.add(Box::new(Sphere::new(
+        Vec3::from_value(4.0, 1.0, 0.0),
+        1.0,
+        Box::new(Metal {
             albedo: Vec3::from_value(0.7, 0.6, 0.5),
             fuzz: 0.0,
         }),
-    }));
+    )));
 
     let camera = Camera::new(
         IMAGE_WIDTH as f32 / IMAGE_HEIGHT as f32,
@@ -108,24 +108,49 @@ fn main() {
         Vec3::from_value(13.0, 2.0, 3.0),
     );
 
-    let mut image_data: Vec<u8> = Vec::new();
-    for i in 0..IMAGE_HEIGHT {
-        for j in 0..IMAGE_WIDTH {
-            let mut pixel_color = Vec3::zero();
+    let world = Arc::new(world);
+    let mut image_data = Vec::new();
 
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let ray = camera.get_ray(
-                    (j as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32,
-                    (i as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32,
-                );
-                pixel_color += render_ray(&ray, &world, MAX_DEPTH, 1e-4);
-            }
+    let threads: Vec<_> = (0..NUM_THREADS)
+        .map(|curr_thread| {
+            let start_row = curr_thread * (IMAGE_HEIGHT / NUM_THREADS);
+            let end_row = (curr_thread + 1) * (IMAGE_HEIGHT / NUM_THREADS);
 
-            let pixel_color = pixel_color.gamma_correction(SAMPLES_PER_PIXEL, 2.0);
-            image_data.extend_from_slice(pixel_color.to_pixel().as_slice());
-        }
+            let moved_world = world.clone();
+
+            thread::spawn(move || {
+                let mut data = Vec::<u8>::new();
+
+                for i in start_row..end_row {
+                    for j in 0..IMAGE_WIDTH {
+                        let mut pixel_color = Vec3::zero();
+
+                        for _ in 0..SAMPLES_PER_PIXEL {
+                            let ray = camera.get_ray(
+                                (j as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32,
+                                (i as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32,
+                            );
+                            pixel_color += render_ray(&ray, &moved_world, MAX_DEPTH, 1e-4);
+                        }
+
+                        let pixel_color = pixel_color.gamma_correction(SAMPLES_PER_PIXEL, 2.0);
+                        let pixel_data = pixel_color.to_pixel();
+
+                        data.push(pixel_data[0]);
+                        data.push(pixel_data[1]);
+                        data.push(pixel_data[2]);
+                    }
+                }
+
+                data
+            })
+        })
+        .collect();
+
+    for thread in threads {
+        let data = thread.join().unwrap();
+        image_data.extend(data);
     }
 
     writer.write_image_data(&image_data).unwrap();
-    eprintln!("Done.");
 }

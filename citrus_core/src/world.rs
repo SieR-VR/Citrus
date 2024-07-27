@@ -2,11 +2,11 @@ use crate::*;
 
 #[derive(Default)]
 pub struct World {
-    pub objects: Vec<Box<dyn hittable::Hittable>>,
+    pub objects: Vec<Box<dyn hittable::Hittable + Send + Sync>>,
 }
 
 impl World {
-    pub fn add(&mut self, object: Box<dyn hittable::Hittable>) {
+    pub fn add(&mut self, object: Box<dyn hittable::Hittable + Send + Sync>) {
         self.objects.push(object);
     }
 }
