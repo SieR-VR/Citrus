@@ -3,7 +3,6 @@ pub mod vec3;
 pub mod utils;
 
 pub mod hittable;
-pub mod sphere;
 
 pub mod material;
 

@@ -1,25 +1,27 @@
-use std::rc::Rc;
+pub mod sphere;
+
+pub use sphere::*;
 
 use crate::*;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub point: Vec3,
     pub normal: Vec3,
     pub t: f32,
 
-    pub material: Rc<dyn material::Material>,
+    pub material: &'a Box<dyn material::Material + Send + Sync>,
 
     pub front_face: bool,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     pub fn new(
         point: Vec3,
         ray: &Ray,
         t: f32,
-        material: Rc<dyn material::Material>,
+        material: &'a Box<dyn material::Material + Send + Sync>,
         outward_normal: &Vec3,
-    ) -> HitRecord {
+    ) -> HitRecord<'a> {
         let front_face = ray.direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             *outward_normal

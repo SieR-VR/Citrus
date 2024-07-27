@@ -1,11 +1,7 @@
 use crate::*;
 
 pub trait Material {
-    fn scatter(
-        &self,
-        ray_in: &Ray,
-        rec: &hittable::HitRecord,
-    ) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, ray_in: &Ray, rec: &hittable::HitRecord) -> Option<(Vec3, Ray)>;
 }
 
 pub struct Lambertian {
@@ -13,17 +9,13 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(
-        &self,
-        _ray_in: &Ray,
-        rec: &hittable::HitRecord,
-    ) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, ray_in: &Ray, rec: &hittable::HitRecord) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
 
-        let scattered = Ray::new(rec.point, scatter_direction);
+        let scattered = Ray::new(rec.point, scatter_direction, Some(ray_in.time));
         Some((self.albedo, scattered))
     }
 }
@@ -34,16 +26,13 @@ pub struct Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        ray_in: &Ray,
-        rec: &hittable::HitRecord,
-    ) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, ray_in: &Ray, rec: &hittable::HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(&ray_in.direction.to_unit(), &rec.normal);
-        let scattered = Ray {
-            origin: rec.point,
-            direction: reflected + random_in_unit_sphere() * self.fuzz,
-        };
+        let scattered = Ray::new(
+            rec.point,
+            reflected + random_in_unit_sphere() * self.fuzz,
+            Some(ray_in.time),
+        );
 
         Some((self.albedo, scattered))
     }
@@ -54,11 +43,7 @@ pub struct Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(
-        &self,
-        ray_in: &Ray,
-        rec: &hittable::HitRecord,
-    ) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, ray_in: &Ray, rec: &hittable::HitRecord) -> Option<(Vec3, Ray)> {
         let etai_over_etat = if rec.front_face {
             1.0 / self.refraction_index
         } else {
@@ -77,10 +62,7 @@ impl Material for Dielectric {
                 refract(&unit_direction, &rec.normal, etai_over_etat)
             };
 
-        let scattered = Ray {
-            origin: rec.point,
-            direction,
-        };
+        let scattered = Ray::new(rec.point, direction, Some(ray_in.time));
 
         Some((Vec3::from_value(1.0, 1.0, 1.0), scattered))
     }
