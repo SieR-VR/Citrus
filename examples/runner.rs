@@ -3,7 +3,7 @@ use std::thread;
 use std::{fs::File, io::BufWriter, path::Path};
 
 use citrus_core::{
-    camera::Camera, hittable::*, material::*, render_ray::render_ray, world::World, *,
+    camera::Camera, hittable::*, material::*, render::render_pixel, world::World, *,
 };
 
 fn main() {
@@ -103,45 +103,47 @@ fn main() {
     )));
 
     let camera = Camera::new(
-        IMAGE_WIDTH as f32 / IMAGE_HEIGHT as f32,
-        20.0,
         Vec3::from_value(13.0, 2.0, 3.0),
+        IMAGE_WIDTH,
+        IMAGE_HEIGHT,
+        20.0,
     );
 
     let world = Arc::new(world);
     let mut image_data = Vec::new();
 
+    let chunk_size = IMAGE_HEIGHT / NUM_THREADS;
     let threads: Vec<_> = (0..NUM_THREADS)
-        .map(|curr_thread| {
-            let start_row = curr_thread * (IMAGE_HEIGHT / NUM_THREADS);
-            let end_row = (curr_thread + 1) * (IMAGE_HEIGHT / NUM_THREADS);
+        .map(|thread_idx| {
+            let start_row = thread_idx * chunk_size;
+            let end_row = if thread_idx == NUM_THREADS - 1 {
+                IMAGE_HEIGHT // Handle remainder rows in last thread
+            } else {
+                (thread_idx + 1) * chunk_size
+            };
 
             let moved_world = world.clone();
+            let moved_camera = camera.clone(); // Assuming Camera implements Clone
 
             thread::spawn(move || {
-                let mut data = Vec::<u8>::new();
+                let mut data =
+                    Vec::with_capacity((3 * (end_row - start_row) * IMAGE_WIDTH) as usize);
 
-                for i in start_row..end_row {
-                    for j in 0..IMAGE_WIDTH {
-                        let mut pixel_color = Vec3::zero();
-
-                        for _ in 0..SAMPLES_PER_PIXEL {
-                            let ray = camera.get_ray(
-                                (j as f32 + rand::random::<f32>()) / (IMAGE_WIDTH - 1) as f32,
-                                (i as f32 + rand::random::<f32>()) / (IMAGE_HEIGHT - 1) as f32,
-                            );
-                            pixel_color += render_ray(&ray, &moved_world, MAX_DEPTH, 1e-4);
-                        }
-
-                        let pixel_color = pixel_color.gamma_correction(SAMPLES_PER_PIXEL, 2.0);
+                for row in start_row..end_row {
+                    for col in 0..IMAGE_WIDTH {
+                        let pixel_color = render_pixel(
+                            col,
+                            row,
+                            &moved_camera,
+                            &moved_world,
+                            SAMPLES_PER_PIXEL,
+                            MAX_DEPTH,
+                        );
                         let pixel_data = pixel_color.to_pixel();
 
-                        data.push(pixel_data[0]);
-                        data.push(pixel_data[1]);
-                        data.push(pixel_data[2]);
+                        data.extend_from_slice(&pixel_data);
                     }
                 }
-
                 data
             })
         })

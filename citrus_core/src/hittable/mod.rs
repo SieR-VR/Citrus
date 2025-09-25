@@ -2,7 +2,7 @@ pub mod sphere;
 
 pub use sphere::*;
 
-use crate::*;
+use crate::{axis_aligned_bounding_boxes::AxisAlignedBoundingBox, *};
 
 pub struct HitRecord<'a> {
     pub point: Vec3,
@@ -41,4 +41,6 @@ impl<'a> HitRecord<'a> {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+
+    fn bounding_box(&self, time0: f32, time1: f32) -> &Option<AxisAlignedBoundingBox>;
 }

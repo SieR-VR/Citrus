@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{axis_aligned_bounding_boxes::AxisAlignedBoundingBox, *};
 
 pub struct Sphere {
     pub center: Vec3,
@@ -8,26 +8,40 @@ pub struct Sphere {
 
     pub is_moving: bool,
     pub toward: Vec3,
+
+    pub bounding_box: Option<AxisAlignedBoundingBox>,
 }
 
 impl Sphere {
     pub fn new(center: Vec3, radius: f32, material: Box<dyn material::Material + Send + Sync>) -> Sphere {
+        let rvec = Vec3::from_value(radius, radius, radius);
+
         Sphere {
             center,
             radius,
             material,
             is_moving: false,
             toward: Vec3::default(),
+            bounding_box: Some(AxisAlignedBoundingBox::new(
+                center - rvec,
+                center + rvec,
+            )),
         }
     }
 
     pub fn moving(center: Vec3, radius: f32, material: Box<dyn material::Material + Send + Sync>, toward: Vec3) -> Sphere {
+        let rvec = Vec3::from_value(radius, radius, radius);
+
         Sphere {
             center,
             radius,
             material,
             is_moving: true,
             toward,
+            bounding_box: Some(AxisAlignedBoundingBox::new(
+                center - rvec,
+                toward + rvec,
+            )),
         }
     }
 
@@ -37,6 +51,10 @@ impl Sphere {
         } else {
             self.center
         }
+    }
+
+    pub fn bounding_box(&self, _time0: f32, _time1: f32) -> &Option<AxisAlignedBoundingBox> {
+        &self.bounding_box
     }
 }
 
@@ -74,5 +92,9 @@ impl hittable::Hittable for Sphere {
             &self.material,
             &outward_normal,
         ))
+    }
+
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> &Option<AxisAlignedBoundingBox> {
+        &self.bounding_box
     }
 }

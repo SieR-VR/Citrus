@@ -15,6 +15,9 @@ pub struct Camera {
     pub defocus_angle: f32,
     pub focus_dist: f32,
 
+    pub width: i32,
+    pub height: i32,
+
     viewport_u: Vec3,
     viewport_v: Vec3,
 
@@ -25,7 +28,8 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f32, v_fov: f32, origin: Vec3) -> Camera {
+    pub fn new(origin: Vec3, width: i32, height: i32, v_fov: f32) -> Camera {
+        let aspect_ratio = width as f32 / height as f32;
         let focus_dist = 10.0;
 
         let theta = v_fov.to_radians();
@@ -65,6 +69,9 @@ impl Camera {
             defocus_angle,
             focus_dist,
 
+            width,
+            height,
+
             viewport_u,
             viewport_v,
 
@@ -86,12 +93,12 @@ impl Camera {
         };
 
         let direction = (pixel_sample - origin).to_unit();
-        let time = rand::random::<f32>();
+        // let time = rand::random::<f32>();
 
         ray::Ray::new(
             origin,
             direction,
-            Some(time),
+            Some(0f32),
         )
     }
 
